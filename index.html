@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>AI for Cybersecurity - Statistics</title>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+		<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.1/dist/css/bootstrap.min.css" integrity="sha384-zCbKRCUGaJDkqS1kPbPd7TveP5iyJE0EjAuZQTgFLD2ylzuqKfdKlfG/eSrtxUkn" crossorigin="anonymous">
+	</head>
+	<style>
+		.smaller-logo img {
+			max-height: 30px;
+		}
+	</style>
+	<body>
+		<div class="w-100 text-center">
+			<div class="spinner-border statistics-spinner" role="status">
+			  <span class="sr-only">Loading...</span>
+			</div>
+
+			<div class="w-100 statistics-table" style="display: none;">
+				<table class="table">
+					<thead>
+						<tr>
+							<th style="width: 25%;">Source</th>
+							<th style="width: 25%;"># Rows</th>
+							<th style="width: 50%;">Last Updated</th>
+						</tr>
+					</thead>
+					<tbody>
+					</tbody>
+				</table>
+				<a class="smaller-logo" href="https://aws.amazon.com/what-is-cloud-computing"><img src="https://d0.awsstatic.com/logos/powered-by-aws.png" alt="Powered by AWS Cloud Computing"></a>
+			</div>
+
+			<p class="w-100 statistics-error" style="display: none;"></p>
+		</div>
+
+		<script>
+			$( document ).ready(function() {
+				$(".statistics-table").hide();
+				setupTable();
+			});
+
+			function setupTable() {
+				$.ajax({
+					url: "https://ai-for-cybersecurity-team-8.s3.amazonaws.com/public/summary_statistics.json", 
+					success: function(result) 
+					{
+						let json_data = $.parseJSON(result);
+
+						if(json_data) {
+							let statistics_table = $(".table tbody");
+
+							//Offset of 60/-60 is 1 hour offset
+							let offset_hours = ((new Date().getTimezoneOffset())/60);
+
+							$.each(json_data, function( k, v ) {
+								let temp_date = new Date(v.upload_time);
+
+								temp_date.setHours(temp_date.getHours() - offset_hours);
+
+								let formatted_date_time = temp_date.toLocaleDateString() + " " + temp_date.toLocaleTimeString();
+
+								let new_row = "<tr><td>" + v.name + "</td><td>" + v.total_rows + "</td><td>" + formatted_date_time + "</td></tr>";
+								statistics_table.append(new_row);
+							});
+
+							$(".statistics-spinner").hide();
+							$(".statistics-table").show();
+						}
+					},
+					error : function(request, error)
+					{
+						$(".statistics-spinner").hide();
+						let error_message = $(".statistics-error").show();
+						error_message.text("An error occurred retrieving the Summary Statistics");
+						error_message.show();
+					}
+				});
+			}
+		</script>
+	</body>
+</html>
